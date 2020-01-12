@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    </head>
+
+    <body>
+        <table>
+            <thead>
+                <tr>
+                    <td>Game id</td>
+                    <td>User blue</td>
+                    <td>User red</td>
+                    <td>join link</td>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in games %}
+                    <tr>
+                        <td>{{item.game_id}}</td>
+                        <td>{{item.playerBlue.name}}</td>
+                        <td>{{item.playerRed.name}}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </body>
+</html>

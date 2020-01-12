@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <style>
+        h1 {
+            color: red;
+        }
+
+        .blue {
+            background-color: blue;
+        }
+        .red {
+            background-color: red;
+        }
+        </style> 
+    </head>
+    <body>
+        <h1>tic tac to</h1>
+        <table id='board'>
+            {% for row in game_board.board %}
+            <tr>
+                {% set row_id = loop.index0 %}
+                {% for cell in row %}
+                    {% set cell_id = row_id*3+loop.index %}
+                    <td id={{cell_id}} class={{cell}}>{{cell_id}}</td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </table>
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.min.js"></script>
+        <script>
+            function play(cellId) {
+                fetch('http://127.0.0.1:50890/play/0/', {
+                      method: 'POST',
+                      headers: {
+                          'Content-Type': 'application/json'
+                      },
+                      body: JSON.stringify({
+                          player: 'blue',
+                          boardId: cellId
+                      })
+                  })
+            }
+
+            function bindBoardEvents(socket) {
+                var board = document.getElementById('board')
+                var cells = board.getElementsByTagName('td')
+    
+                for (var i = 0; i < cells.length; i++){
+                    cells[i].onclick = function() {
+                        if (this.className == "blue") {
+                            this.className = ""
+                        }
+                        else {
+                            this.className = "blue"
+                            socket.emit('played', this.id)
+                            play(this.id)
+                        }
+                    }
+                }
+            }
+
+            document.addEventListener('DOMContentLoaded', (event) => {
+
+                var socket = io.connect('http://' + document.domain + ':' + location.port);
+                bindBoardEvents(socket)
+
+                socket.on('played', function(msg){
+                    document.getElementById(msg).className = "blue"
+                })
+            });
+        </script>
+    </body>
+</html>
