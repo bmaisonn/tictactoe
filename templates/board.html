@@ -16,6 +16,18 @@
     </head>
     <body>
         <h1>tic tac to</h1>
+
+        <div>
+            <div>User {{game_board.game.player_red.name}} (red) vs {{game_board.game.player_blue.name}} (blue)</div>
+            <div>
+                you are:
+                    <select name="current_user" id="user_selection">
+                      <option value={{game_board.game.player_red.user_id}}>{{game_board.game.player_red.name}}</option>
+                      <option value={{game_board.game.player_blue.user_id}}>{{game_board.game.player_blue.name}}</option>
+                    </select>
+            </div>
+            <div ></div>
+        </div>
         <table id='board'>
             {% for row in game_board.board %}
             <tr>
@@ -30,14 +42,17 @@
 
         <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.min.js"></script>
         <script>
-            function play(cellId) {
-                fetch('http://127.0.0.1:50890/play/0/', {
+            user_selection = document.getElementById("user_selection")
+            var current_user_id = user_selection.options[user_selection.selectedIndex].value;
+            
+            function play(cellId, playerId) {
+                fetch('http://127.0.0.1:8080/play/1/', {
                       method: 'POST',
                       headers: {
                           'Content-Type': 'application/json'
                       },
                       body: JSON.stringify({
-                          player: 'blue',
+                          playerId: playerId,
                           boardId: cellId
                       })
                   })
@@ -46,17 +61,12 @@
             function bindBoardEvents(socket) {
                 var board = document.getElementById('board')
                 var cells = board.getElementsByTagName('td')
-    
+                var userSelection =document.getElementById('user_selection')
+
                 for (var i = 0; i < cells.length; i++){
                     cells[i].onclick = function() {
-                        if (this.className == "blue") {
-                            this.className = ""
-                        }
-                        else {
-                            this.className = "blue"
-                            socket.emit('played', this.id)
-                            play(this.id)
-                        }
+                        socket.emit('played', 1, parseInt(this.id), parseInt(current_user_id))
+                        play(this.id, current_user_id)
                     }
                 }
             }
@@ -66,8 +76,18 @@
                 var socket = io.connect('http://' + document.domain + ':' + location.port);
                 bindBoardEvents(socket)
 
-                socket.on('played', function(msg){
-                    document.getElementById(msg).className = "blue"
+                socket.on('boardupdate', function(boardId, colorName){
+                    if (document.getElementById(boardId).className === '') {
+                        document.getElementById(boardId).className = colorName
+
+                    }
+                    else {
+                        document.getElementById(boardId).className = ''
+                    }
+                })
+
+                user_option = document.getElementById("user_selection").addEventListener('change', function (){
+                    current_user_id = this.options[this.selectedIndex].value;
                 })
             });
         </script>
